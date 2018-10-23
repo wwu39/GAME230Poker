@@ -1,23 +1,43 @@
+// memory checking
+#define _CRTDBG_MAP_ALLOC
+#define _CRTDBG_MAP_ALLOC_NEW
+#include <cstdlib>
+#include <crtdbg.h>
+#ifdef _DEBUG
+#ifndef DBG_NEW
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW
+#endif
+#endif
+
 #include "Poker.h"
 
 #include <ctime>
 #include <cstdlib>
 
-void Poker::swapCardsInDeck(int a, int b)
+void Poker::swap(card * head, int a, int b)
 {
 	// get to specified locations
-	card * tmp1 = deck_top;
+	card * tmp1 = head;
 	for (int i = 0; i < a; ++i) tmp1 = tmp1->next;
-	card * tmp2 = deck_top;
+	card * tmp2 = head;
 	for (int i = 0; i < b; ++i) tmp2 = tmp2->next;
 
-	// swaping only suit and num
-	unsigned char tmpsuit = tmp1->suit;
-	unsigned char tmpnum = tmp1->num;
-	tmp1->suit = tmp2->suit;
-	tmp1->num = tmp2->num;
-	tmp2->suit = tmpsuit;
-	tmp2->num = tmpnum;
+	// swaping
+	card temp = *tmp1;
+	*tmp1 = *tmp2;
+	*tmp2 = temp;
+}
+
+void Poker::destroy(card * head)
+{
+	if (head == nullptr) return;
+	while (head->next != nullptr) {
+		head = head->next;
+		delete head->prev;
+		head->prev = nullptr;
+	}
+	delete head;
 }
 
 Poker::Poker()
@@ -28,7 +48,7 @@ Poker::Poker()
 	card * cur_cd = deck_top;
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 1; j <= 13; ++j) {
-			if (i == 0 && j == 1)continue;
+			if (i == 0 && j == 1) continue;
 			card * temp = new card(i, j);
 			cur_cd->next = temp;
 			temp->prev = cur_cd;
@@ -40,17 +60,12 @@ Poker::Poker()
 	shuffle();
 }
 
-
 Poker::~Poker()
 {
-	// free all blocks
-	while (deck_top->next != nullptr) {
-		deck_top = deck_top->next;
-		delete deck_top->prev;
-		deck_top->prev = nullptr;
-	}
-	delete deck_top;
+	destroy(deck_top);
 	deck_top = nullptr;
+	destroy(hands_top);
+	hands_top = nullptr;
 }
 
 void Poker::shuffle()
@@ -60,18 +75,81 @@ void Poker::shuffle()
 		int idx1 = rand() % deck_count;
 		srand((unsigned)time(nullptr) % (2 * i + 1));
 		int idx2 = rand() % deck_count;
-
-		cout << "Swapping (" << idx1 << ") and (" << idx2 << ") cards" << endl;
-		swapCardsInDeck(idx1, idx2);
+		swap(deck_top, idx1, idx2);
 	}
-	
 }
 
 void Poker::draw(int num)
 {
-	for (int i = 0; i < num; ++i) {
+	for (int i = 0; i < num; ++i) draw();
+}
 
+void Poker::draw()
+{
+	// if run out of deck, rebuild one
+	if (deck_top == nullptr) reconstructDeck();
+	insert(hands_top, 0, remove(deck_top, 0, deck_count), hand_count);
+}
+
+card Poker::remove(card * &head, int pos, int& count)
+{
+	if (head == nullptr) return INVALID_CARD;
+	card * cur_cd = head; // local iterator
+	if (pos == 0) {
+		// change head if deleting the 1st
+		head = head->next; 
+		head->prev = nullptr;
+	} else {
+		for (int i = 0; i < pos; ++i) cur_cd = cur_cd->next;
+		cur_cd->prev->next = cur_cd->next;
+		cur_cd->next->prev = cur_cd->prev;
 	}
+	card ret = *cur_cd;
+	delete cur_cd;
+	cur_cd = nullptr;
+	--count;
+	return ret;
+}
+
+void Poker::insert(card * &head, int pos, const card& c, int& count)
+{
+	card * new_cd = new card(c.suit, c.num);
+	if (head == nullptr) { // insert the 1st
+		head = new_cd;
+		++count;
+		return;
+	}
+	if (pos == 0) { // insert at head
+		new_cd->next = head;
+		head->prev = new_cd;
+		head = new_cd; // change head
+	} else {
+		card * cur_cd = head;
+		for (int i = 0; i < pos; ++i) cur_cd = cur_cd->next;
+		cur_cd->prev->next = new_cd;
+		new_cd->prev = cur_cd->prev;
+		cur_cd->prev = new_cd;
+		new_cd->next = cur_cd;
+	}
+	++count;
+}
+
+bool Poker::existInHands(card c)
+{
+	if (hands_top == nullptr) return false;
+	for (card * i = hands_top; i->next != nullptr; i = i->next)
+		if (i->suit == c.suit && i->num == c.num) return true;
+	return false;
+}
+
+void Poker::reconstructDeck()
+{
+	for (unsigned char suit = 0; suit < 4; ++suit)
+		for (unsigned char num = 1; num <= 13; ++num) {
+			card c{ suit, num };
+			if (!existInHands(c)) insert(deck_top, 0, c, deck_count);
+		}
+	shuffle();
 }
 
 void Poker::displayHands()
@@ -84,6 +162,7 @@ void Poker::displayHands()
 		temp = temp->next;
 		++i;
 	}
+	cout << endl;
 }
 
 void Poker::displayDeck()
@@ -96,11 +175,11 @@ void Poker::displayDeck()
 		temp = temp->next;
 		++count;
 	}
+	cout << endl;
 }
 
 void Poker::displayOptions()
 {
-	cout << endl;
 	cout << "The deck contains "<< deck_count <<" cards." << endl << endl;
 	cout << "OPTIONS..." << endl
 		<< "- Type the letters for the cards you wish to keep. (i.e., \"acd\")" << endl
@@ -136,10 +215,17 @@ ostream & operator<<(ostream & os, const card & c)
 	return os;
 }
 
-card::card(int suit, int num)
+card::card(unsigned char suit, unsigned char num)
 {
 	this->suit = suit;
 	this->num = num;
 	prev = nullptr;
 	next = nullptr;
+}
+
+card & card::operator=(const card & c)
+{
+	suit = c.suit;
+	num = c.num;
+	return *this;
 }
