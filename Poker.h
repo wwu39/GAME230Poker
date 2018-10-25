@@ -52,7 +52,7 @@ class Poker
 	int deck_count = 0;
 	int hand_count = 0;
 	string input;
-	int delCount;
+	int delCount = MAXHAND;
 
 	// private helpers
 	void swap(card * head, int idx1, int idx2);

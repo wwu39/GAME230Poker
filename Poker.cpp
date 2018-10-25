@@ -216,7 +216,7 @@ void Poker::displayHands() const
 	card * temp = hands_top;
 	char i = 'A';
 	while (temp != nullptr) {
-		cout << i << ": " << *temp << ((i - 'A' <= delCount) ? " (Kept)" : "") << endl;
+		cout << i << ": " << *temp << ((i - 'A' < MAXHAND - delCount) ? " (Kept)" : "") << endl;
 		temp = temp->next;
 		++i;
 	}
