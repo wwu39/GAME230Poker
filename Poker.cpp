@@ -152,7 +152,53 @@ void Poker::reconstructDeck()
 	shuffle();
 }
 
-void Poker::displayHands()
+bool Poker::isOption(string input)
+{
+	if (input == "DECK") return true;
+	if (input == "NONE") return true;
+	if (input == "ALL") return true;
+	if (input == "EXIT") return true;
+	if (input == "SWAP") return true;
+	if (input.length() <= 5) { 
+		for (auto & c : input)
+			if (c < 'A' || c > 'E') return false;
+		return true;
+	}
+	return false;
+}
+
+bool Poker::isLetter(char c)
+{
+	if (c >= 'A'&&c <= 'E')return true;
+	return false;
+}
+
+unsigned char Poker::getValue(string str)
+{
+	try {
+		unsigned char num = stoi(str);
+		if (num >= 1 && num <= 13) return num;
+		return INVALID_VALUE;
+	} catch (const invalid_argument& e) {
+		return INVALID_VALUE;
+	}
+	return INVALID_VALUE;
+}
+
+unsigned char Poker::getSuit(string input)
+{
+	if (input.length() > 1) return INVALID_SUIT;
+	unsigned char ch = toupper(input[0]);
+	switch (ch) {
+		case 'S': return Spades;
+		case 'H': return Hearts;
+		case 'C': return Clubs;
+		case 'D': return Diamonds;
+		default: return INVALID_SUIT;
+	}
+}
+
+void Poker::displayHands() const
 {
 	cout << "Your hand contains: " << endl;
 	card * temp = hands_top;
@@ -165,7 +211,7 @@ void Poker::displayHands()
 	cout << endl;
 }
 
-void Poker::displayDeck()
+void Poker::displayDeck() const
 {
 	cout << "Deck(" << deck_count << "):" << endl;
 	card * temp = deck_top;
@@ -178,7 +224,7 @@ void Poker::displayDeck()
 	cout << endl;
 }
 
-void Poker::displayOptions()
+void Poker::displayOptions() const
 {
 	cout << "The deck contains "<< deck_count <<" cards." << endl << endl;
 	cout << "OPTIONS..." << endl
@@ -193,6 +239,85 @@ void Poker::displayOptions()
 
 void Poker::discard()
 {
+}
+
+void Poker::getOption() 
+{
+	cin >> input;
+	for (auto & c : input) c = toupper(c); // uppercase
+	while (!isOption(input)) {
+		cout << sorry << endl;
+		cin >> input;
+	}
+}
+
+int Poker::executeOption()
+{
+	if (input == "DECK") {
+		displayDeck();
+		return 0;
+	}
+	if (input == "NONE") {
+		// discard all cards in your hand.
+		destroy(hands_top);
+		hands_top = nullptr;
+		return 0;
+	}
+	if (input == "ALL") {
+		// keep all cards in your hand.
+		// done
+		return 0;
+	}
+	if (input == "EXIT") {
+		return EXIT;
+	}
+	if (input == "SWAP") {
+		// swap a card in your hand with one in the deck
+		cout << "Enter the letter of the card in hand: ";
+		string in;
+		cin >> in;
+		char letter = toupper(in[0]);
+		while (in.length() > 1 || !isLetter(letter)) {
+			cout << sorry << endl;
+			cin >> in;
+		}
+		card hand = remove(hands_top, letter - 'A', hand_count);
+		cout << "Remove " << hand << " from hand." << endl;
+		cout << endl << "Enter the value of the card in the deck to swap with: ";
+		cin >> in;
+		unsigned char num;
+		while ((num = getValue(in)) == INVALID_VALUE) {
+			cout << endl << "Invalid value, please reenter: ";
+			cin >> in;
+		}
+		cout << endl << "Enter the suit (c,d,h,s) of the card in the deck to swap with: ";
+		cin >> in;
+		unsigned char suit;
+		while ((suit = getSuit(in)) == INVALID_SUIT) {
+			cout << endl << "Invalid value, please reenter: ";
+			cin >> in;
+		}
+		// search from the deck
+		card * cur_cd = deck_top;
+		bool found = false;
+		for (; cur_cd->next != nullptr; cur_cd = cur_cd->next)
+			if (cur_cd->num == num && cur_cd->suit == suit) { 
+				found = true;
+				break;
+			}
+		if (!found) {
+			cout << card(suit, num) << " not found in the deck." << endl;
+			return 0;
+		}
+		// found, swaping
+		cur_cd->suit = hand.suit;
+		cur_cd->num = hand.num;
+		insert(hands_top, 0, card(suit, num), hand_count);
+		return 0;
+	}
+	for (int i = 0; i < input.length(); ++i) {
+		
+	}
 }
 
 ostream & operator<<(ostream & os, const card & c)

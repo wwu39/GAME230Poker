@@ -30,11 +30,15 @@ int main() {
 
 	while (1) { // game loop
 		money -= ante;
-		cout << "You pay a $" << ante << " ante and now have $" << money << endl;
+		cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
 		Poker * game = new Poker();
 		game->draw(5);
-		game->displayHands();
-		game->displayOptions();
+		while (1) {
+			game->displayHands();
+			game->displayOptions();
+			game->getOption();
+			if (game->executeOption() == EXIT) break;
+		}
 		delete game;
 		system("pause");
 		return 1;

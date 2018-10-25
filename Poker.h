@@ -13,6 +13,7 @@
 
 
 #include <iostream>
+#include <string>
 
 #define MAXHAND 5
 
@@ -23,8 +24,13 @@
 #define Diamonds 3
 
 #define INVALID_CARD card(4,14)
+#define INVALID_VALUE 0
+#define INVALID_SUIT 4
+#define EXIT 1
 
 using namespace std;
+
+const string sorry = "Sorry, I didn't understand, please try again...";
 
 struct card
 {
@@ -44,6 +50,7 @@ class Poker
 	card * hands_top = nullptr;
 	int deck_count = 0;
 	int hand_count = 0;
+	string input;
 
 	// private helpers
 	void swap(card * head, int idx1, int idx2);
@@ -53,14 +60,20 @@ class Poker
 	void insert(card * &head, int pos, const card&, int& count);
 	bool existInHands(card);
 	void reconstructDeck();
+	bool isOption(string);
+	bool isLetter(char);
+	unsigned char getValue(string);
+	unsigned char getSuit(string);
 public:
 	Poker();
 	~Poker();
 	void shuffle();
 	void draw(int);
-	void displayHands();
-	void displayDeck();
-	void displayOptions();
+	void displayHands() const;
+	void displayDeck() const;
+	void displayOptions() const;
 	void discard();
+	void getOption();
+	int executeOption();
 };
 
