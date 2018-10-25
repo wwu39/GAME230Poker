@@ -88,7 +88,7 @@ void Poker::draw()
 {
 	// if run out of deck, rebuild one
 	if (deck_top == nullptr) reconstructDeck();
-	insert(hands_top, 0, remove(deck_top, 0, deck_count), hand_count);
+	insert(hands_top, TAIL, remove(deck_top, 0, deck_count), hand_count);
 }
 
 card Poker::remove(card * &head, int pos, int& count)
@@ -97,12 +97,19 @@ card Poker::remove(card * &head, int pos, int& count)
 	card * cur_cd = head; // local iterator
 	if (pos == 0) {
 		// change head if deleting the 1st
-		head = head->next; 
-		head->prev = nullptr;
+		if (head->next != nullptr) {
+			head = head->next; 
+			head->prev = nullptr;
+		} else {
+			delete head;
+			head = nullptr;
+		}
+		
 	} else {
 		for (int i = 0; i < pos; ++i) cur_cd = cur_cd->next;
 		cur_cd->prev->next = cur_cd->next;
-		cur_cd->next->prev = cur_cd->prev;
+		if (cur_cd->next != nullptr) 
+			cur_cd->next->prev = cur_cd->prev;
 	}
 	card ret = *cur_cd;
 	delete cur_cd;
@@ -123,6 +130,11 @@ void Poker::insert(card * &head, int pos, const card& c, int& count)
 		new_cd->next = head;
 		head->prev = new_cd;
 		head = new_cd; // change head
+	} else if (pos == TAIL) { // insert at tail
+		card * cur_cd = head; 
+		for (; cur_cd->next != nullptr; cur_cd = cur_cd->next) {} // get to tail
+		cur_cd->next = new_cd;
+		new_cd->prev = cur_cd;
 	} else {
 		card * cur_cd = head;
 		for (int i = 0; i < pos; ++i) cur_cd = cur_cd->next;
@@ -146,7 +158,7 @@ void Poker::reconstructDeck()
 {
 	for (unsigned char suit = 0; suit < 4; ++suit)
 		for (unsigned char num = 1; num <= 13; ++num) {
-			card c{ suit, num };
+			card c { suit, num };
 			if (!existInHands(c)) insert(deck_top, 0, c, deck_count);
 		}
 	shuffle();
@@ -204,7 +216,7 @@ void Poker::displayHands() const
 	card * temp = hands_top;
 	char i = 'A';
 	while (temp != nullptr) {
-		cout << i << ": " << *temp << endl;
+		cout << i << ": " << *temp << ((i - 'A' <= delCount) ? " (Kept)" : "") << endl;
 		temp = temp->next;
 		++i;
 	}
@@ -244,10 +256,11 @@ void Poker::discard()
 void Poker::getOption() 
 {
 	cin >> input;
-	for (auto & c : input) c = toupper(c); // uppercase
+	for (auto & c : input) c = toupper(c);
 	while (!isOption(input)) {
 		cout << sorry << endl;
 		cin >> input;
+		for (auto & c : input) c = toupper(c);
 	}
 }
 
@@ -261,6 +274,7 @@ int Poker::executeOption()
 		// discard all cards in your hand.
 		destroy(hands_top);
 		hands_top = nullptr;
+		draw(5);
 		return 0;
 	}
 	if (input == "ALL") {
@@ -312,12 +326,22 @@ int Poker::executeOption()
 		// found, swaping
 		cur_cd->suit = hand.suit;
 		cur_cd->num = hand.num;
-		insert(hands_top, 0, card(suit, num), hand_count);
+		insert(hands_top, TAIL, card(suit, num), hand_count);
 		return 0;
 	}
-	for (int i = 0; i < input.length(); ++i) {
-		
-	}
+	// determine which hands to discard
+	bool delHands[MAXHAND] = { true, true, true, true, true };
+	for (unsigned int i = 0; i < input.length(); ++i)
+		delHands[input[i] - 'A'] = false;
+	// reverse deleting doesn't cause problem
+	delCount = 0;
+	for (int i = MAXHAND - 1; i >= 0; --i)
+		if (delHands[i]) {
+			remove(hands_top, i, hand_count);
+			++delCount;
+		}
+	draw(delCount);
+	return 0;
 }
 
 ostream & operator<<(ostream & os, const card & c)

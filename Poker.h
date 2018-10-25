@@ -27,10 +27,11 @@
 #define INVALID_VALUE 0
 #define INVALID_SUIT 4
 #define EXIT 1
+#define TAIL -1
 
 using namespace std;
 
-const string sorry = "Sorry, I didn't understand, please try again...";
+const string sorry = "Sorry, I didn't understand, please reenter: ";
 
 struct card
 {
@@ -51,6 +52,7 @@ class Poker
 	int deck_count = 0;
 	int hand_count = 0;
 	string input;
+	int delCount;
 
 	// private helpers
 	void swap(card * head, int idx1, int idx2);
