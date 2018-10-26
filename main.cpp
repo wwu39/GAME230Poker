@@ -54,7 +54,7 @@ int main() {
 				}
 				cout << endl << "Press enter to play another round..." << endl;
 				cin.get();
-				cin.ignore();
+				cin.ignore(9999, '\n');
 				cout << "--------------------------------------------------" << endl << endl;
 				money -= ante;
 				cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
