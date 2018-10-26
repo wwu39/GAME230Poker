@@ -60,9 +60,5 @@ int main() {
 				cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
 			}
 		}
-		delete game;
-		system("pause");
-		return 1;
 	}
-	return 0;
 }
