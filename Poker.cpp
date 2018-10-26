@@ -365,39 +365,39 @@ int Poker::winMoney()
 	int win = 0;
 	if (isRoyalFlush()) {
 		win = 800;
-		cout << "Royal Flush!" << endl;
+		cout << "Congratulations! Royal Flush!" << endl;
 	}
 	else if (isStraightFlush()) {
 		win = 50;
-		cout << "Straight Flush!" << endl;
+		cout << "Congratulations! Straight Flush!" << endl;
 	}
 	else if (is4OfAKind()) {
 		win = 25;
-		cout << "Four of a kind!" << endl;
+		cout << "Congratulations! Four of a kind!" << endl;
 	}
 	else if (isFullHouse()) {
 		win = 9;
-		cout << "Full House!" << endl;
+		cout << "Congratulations! Full House!" << endl;
 	}
 	else if (isFlush()) {
 		win = 6;
-		cout << "Flush!" << endl;
+		cout << "Congratulations! Flush!" << endl;
 	}
 	else if (isStraight()) {
 		win = 5;
-		cout << "Straight!" << endl;
+		cout << "Congratulations! Straight!" << endl;
 	}
 	else if (is3OfAKind()) {
 		win = 3;
-		cout << "Three of a kind!" << endl;
+		cout << "Congratulations! Three of a kind!" << endl;
 	}
 	else if (is2Pairs()) {
 		win = 2;
-		cout << "Two pairs!" << endl;
+		cout << "Congratulations! Two pairs!" << endl;
 	}
 	else if (isPairJackOrBetter()) {
 		win = 1;
-		cout << "Pair of Jacks or better!" << endl;
+		cout << "Congratulations! Pair of Jacks or better!" << endl;
 	}
 	else {
 		win = 0;
