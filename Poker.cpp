@@ -453,7 +453,6 @@ int Poker::executeOption()
 			cin >> in;
 			letter = toupper(in[0]);
 		}
-		card hand = remove(hands_top, letter - 'A', hand_count);
 		cout << "Enter the value of the card in the deck to swap with: ";
 		cin >> in;
 		unsigned char num;
@@ -471,7 +470,7 @@ int Poker::executeOption()
 		// search from the deck
 		card * cur_cd = deck_top;
 		bool found = false;
-		for (; cur_cd->next != nullptr; cur_cd = cur_cd->next)
+		for (; cur_cd != nullptr; cur_cd = cur_cd->next)
 			if (cur_cd->num == num && cur_cd->suit == suit) { 
 				found = true;
 				break;
@@ -481,6 +480,7 @@ int Poker::executeOption()
 			return 0;
 		}
 		// found, swaping
+		card hand = remove(hands_top, letter - 'A', hand_count);
 		cur_cd->suit = hand.suit;
 		cur_cd->num = hand.num;
 		insert(hands_top, TAIL, card(suit, num), hand_count);
