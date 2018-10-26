@@ -14,6 +14,7 @@
 
 #include <ctime>
 #include <cstdlib>
+#include <algorithm>
 
 void Poker::swap(card * head, int a, int b)
 {
@@ -29,7 +30,7 @@ void Poker::swap(card * head, int a, int b)
 	*tmp2 = temp;
 }
 
-void Poker::destroy(card * head)
+void Poker::destroy(card * &head)
 {
 	if (head == nullptr) return;
 	while (head->next != nullptr) {
@@ -38,6 +39,7 @@ void Poker::destroy(card * head)
 		head->prev = nullptr;
 	}
 	delete head;
+	head = nullptr;
 }
 
 Poker::Poker()
@@ -79,6 +81,99 @@ void Poker::shuffle()
 	}
 }
 
+bool Poker::isRoyalFlush() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) {
+		if (i->suit != hands_top->suit) return false;
+		A[j++] = i->num;
+	}
+	sort(A, A + 5);
+	return A[0] == 1 && A[1] == 10 && A[2] == 11 && A[3] == 12 && A[4] == 13;
+}
+
+bool Poker::isStraightFlush() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) {
+		if (i->suit != hands_top->suit) return false;
+		A[j++] = i->num;
+	}
+	sort(A, A + 5);
+	return A[1] == A[0] + 1 && A[2] == A[1] + 1 && A[3] == A[2] + 1 && A[4] == A[3] + 1;
+}
+
+bool Poker::isFullHouse() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) A[j++] = i->num;
+	sort(A, A + 5);
+	return (A[0] == A[1] && A[1] == A[2] && A[3] == A[4])
+		|| (A[0] == A[1] && A[2] == A[3] && A[3] == A[4]);
+}
+
+bool Poker::is4OfAKind() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) A[j++] = i->num;
+	sort(A, A + 5);
+	return (A[0] == A[1] && A[1] == A[2] && A[2] == A[3])
+		|| (A[1] == A[2] && A[2] == A[3] && A[3] == A[4]);
+}
+
+bool Poker::isFlush() const
+{
+	// all same suit
+	for (card * i = hands_top->next; i != nullptr; i = i->next)
+		if (i->suit != hands_top->suit) return false;
+	return true;
+}
+
+bool Poker::isStraight() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) A[j++] = i->num;
+	sort(A, A + 5);
+	return A[1] == A[0] + 1 && A[2] == A[1] + 1 && A[3] == A[2] + 1 && A[4] == A[3] + 1;
+}
+
+bool Poker::is3OfAKind() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) A[j++] = i->num;
+	sort(A, A + 5);
+	return (A[0] == A[1] && A[1] == A[2])
+		|| (A[1] == A[2] && A[2] == A[3])
+		|| (A[2] == A[3] && A[3] == A[4]);
+}
+
+bool Poker::is2Pairs() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next) A[j++] = i->num;
+	sort(A, A + 5);
+	return (A[0] == A[1] && A[2] == A[3])
+		|| (A[0] == A[1] && A[3] == A[4])
+		|| (A[1] == A[2] && A[3] == A[4]);
+}
+
+bool Poker::isPairJackOrBetter() const
+{
+	int A[5] = { -4,-3,-2,-1,0 };
+	int j = 0;
+	for (card * i = hands_top; i != nullptr; i = i->next)
+		if (i->num >= 11 || i->num == 1) A[j++] = i->num;
+	sort(A, A + 5);
+	return A[5] == A[4] || A[4] == A[3] || A[3] == A[2] || A[2] == A[1] || A[1] == A[0];
+}
+
 void Poker::draw(int num)
 {
 	for (int i = 0; i < num; ++i) draw();
@@ -100,11 +195,9 @@ card Poker::remove(card * &head, int pos, int& count)
 		if (head->next != nullptr) {
 			head = head->next; 
 			head->prev = nullptr;
-		} else {
-			delete head;
+		} else { // deleting the only one
 			head = nullptr;
 		}
-		
 	} else {
 		for (int i = 0; i < pos; ++i) cur_cd = cur_cd->next;
 		cur_cd->prev->next = cur_cd->next;
@@ -149,7 +242,7 @@ void Poker::insert(card * &head, int pos, const card& c, int& count)
 bool Poker::existInHands(card c)
 {
 	if (hands_top == nullptr) return false;
-	for (card * i = hands_top; i->next != nullptr; i = i->next)
+	for (card * i = hands_top; i != nullptr; i = i->next)
 		if (i->suit == c.suit && i->num == c.num) return true;
 	return false;
 }
@@ -164,7 +257,7 @@ void Poker::reconstructDeck()
 	shuffle();
 }
 
-bool Poker::isOption(string input)
+bool Poker::isOption(string input) const
 {
 	if (input == "DECK") return true;
 	if (input == "NONE") return true;
@@ -179,13 +272,13 @@ bool Poker::isOption(string input)
 	return false;
 }
 
-bool Poker::isLetter(char c)
+bool Poker::isLetter(char c) const
 {
 	if (c >= 'A'&&c <= 'E')return true;
 	return false;
 }
 
-unsigned char Poker::getValue(string str)
+unsigned char Poker::getValue(string str) const
 {
 	try {
 		unsigned char num = stoi(str);
@@ -197,7 +290,7 @@ unsigned char Poker::getValue(string str)
 	return INVALID_VALUE;
 }
 
-unsigned char Poker::getSuit(string input)
+unsigned char Poker::getSuit(string input) const
 {
 	if (input.length() > 1) return INVALID_SUIT;
 	unsigned char ch = toupper(input[0]);
@@ -210,7 +303,19 @@ unsigned char Poker::getSuit(string input)
 	}
 }
 
-void Poker::displayHands() const
+void Poker::printValue(int v) const
+{
+	switch (v) {
+		case 11: cout << "J";  break;
+		case 12: cout << "Q"; break;
+		case 13: cout << "K";  break;
+		case 1:  cout << "A";   break;
+		default: cout << v;   break;
+	}
+	cout << " ";
+}
+
+void Poker::displayHands()
 {
 	cout << "Your hand contains: " << endl;
 	card * temp = hands_top;
@@ -221,19 +326,25 @@ void Poker::displayHands() const
 		++i;
 	}
 	cout << endl;
+	delCount = MAXHAND;
 }
 
 void Poker::displayDeck() const
 {
-	cout << "Deck(" << deck_count << "):" << endl;
-	card * temp = deck_top;
-	int count = 1;
-	while (temp != nullptr) {
-		cout << count << ": " << *temp << endl;
-		temp = temp->next;
-		++count;
-	}
-	cout << endl;
+	cout << endl << "Deck(" << deck_count << "):";
+	bool spades[13] = {}, hearts[13] = {}, clubs[13] = {}, diamonds[13] = {};
+	for (card * i = deck_top; i != nullptr; i = i->next)
+		switch (i->suit) {
+			case Spades: spades[i->num - 1] = true; break;
+			case Hearts: hearts[i->num - 1] = true; break;
+			case Clubs: clubs[i->num - 1] = true; break;
+			case Diamonds: diamonds[i->num - 1] = true; break;
+		}
+	cout << endl << "Spades: "; for (int i = 0; i < 13; ++i) if (spades[i]) printValue(i + 1);
+	cout << endl << "Hearts: "; for (int i = 0; i < 13; ++i) if (hearts[i]) printValue(i + 1);
+	cout << endl << "Clubs: "; for (int i = 0; i < 13; ++i) if (clubs[i]) printValue(i + 1);
+	cout << endl << "Diamonds: "; for (int i = 0; i < 13; ++i) if (diamonds[i]) printValue(i + 1);
+	cout << endl << endl;
 }
 
 void Poker::displayOptions() const
@@ -249,8 +360,55 @@ void Poker::displayOptions() const
 		<< "YOUR CHOICE: " << endl;
 }
 
-void Poker::discard()
+int Poker::winMoney()
 {
+	int win = 0;
+	if (isRoyalFlush()) {
+		win = 800;
+		cout << "Royal Flush!" << endl;
+	}
+	else if (isStraightFlush()) {
+		win = 50;
+		cout << "Straight Flush!" << endl;
+	}
+	else if (is4OfAKind()) {
+		win = 25;
+		cout << "Four of a kind!" << endl;
+	}
+	else if (isFullHouse()) {
+		win = 9;
+		cout << "Full House!" << endl;
+	}
+	else if (isFlush()) {
+		win = 6;
+		cout << "Flush!" << endl;
+	}
+	else if (isStraight()) {
+		win = 5;
+		cout << "Straight!" << endl;
+	}
+	else if (is3OfAKind()) {
+		win = 3;
+		cout << "Three of a kind!" << endl;
+	}
+	else if (is2Pairs()) {
+		win = 2;
+		cout << "Two pairs!" << endl;
+	}
+	else if (isPairJackOrBetter()) {
+		win = 1;
+		cout << "Pair of Jacks or better!" << endl;
+	}
+	else {
+		win = 0;
+		cout << "No Poker hand scored. :(" << endl;
+	}
+	cout << "You earned $" << win << endl;
+
+	// discard all hands and draw 5
+	destroy(hands_top);
+	draw(5);
+	return win;
 }
 
 void Poker::getOption() 
@@ -258,7 +416,7 @@ void Poker::getOption()
 	cin >> input;
 	for (auto & c : input) c = toupper(c);
 	while (!isOption(input)) {
-		cout << sorry << endl;
+		cout << sorry;
 		cin >> input;
 		for (auto & c : input) c = toupper(c);
 	}
@@ -275,12 +433,11 @@ int Poker::executeOption()
 		destroy(hands_top);
 		hands_top = nullptr;
 		draw(5);
-		return 0;
+		return CHECK;
 	}
 	if (input == "ALL") {
-		// keep all cards in your hand.
-		// done
-		return 0;
+		delCount = 0;
+		return CHECK;
 	}
 	if (input == "EXIT") {
 		return EXIT;
@@ -292,23 +449,23 @@ int Poker::executeOption()
 		cin >> in;
 		char letter = toupper(in[0]);
 		while (in.length() > 1 || !isLetter(letter)) {
-			cout << sorry << endl;
+			cout << sorry;
 			cin >> in;
+			letter = toupper(in[0]);
 		}
 		card hand = remove(hands_top, letter - 'A', hand_count);
-		cout << "Remove " << hand << " from hand." << endl;
-		cout << endl << "Enter the value of the card in the deck to swap with: ";
+		cout << "Enter the value of the card in the deck to swap with: ";
 		cin >> in;
 		unsigned char num;
 		while ((num = getValue(in)) == INVALID_VALUE) {
-			cout << endl << "Invalid value, please reenter: ";
+			cout << "Invalid value, please reenter: ";
 			cin >> in;
 		}
-		cout << endl << "Enter the suit (c,d,h,s) of the card in the deck to swap with: ";
+		cout << "Enter the suit (c,d,h,s) of the card in the deck to swap with: ";
 		cin >> in;
 		unsigned char suit;
 		while ((suit = getSuit(in)) == INVALID_SUIT) {
-			cout << endl << "Invalid value, please reenter: ";
+			cout << "Invalid suit, please reenter: ";
 			cin >> in;
 		}
 		// search from the deck
@@ -320,13 +477,14 @@ int Poker::executeOption()
 				break;
 			}
 		if (!found) {
-			cout << card(suit, num) << " not found in the deck." << endl;
+			cout << card(suit, num) << " not found in the deck." << endl << endl;
 			return 0;
 		}
 		// found, swaping
 		cur_cd->suit = hand.suit;
 		cur_cd->num = hand.num;
 		insert(hands_top, TAIL, card(suit, num), hand_count);
+		delCount = 1;
 		return 0;
 	}
 	// determine which hands to discard
@@ -341,7 +499,8 @@ int Poker::executeOption()
 			++delCount;
 		}
 	draw(delCount);
-	return 0;
+	cout << "You kept "<< MAXHAND - delCount <<" and drew " << delCount << " cards." << endl;
+	return CHECK;
 }
 
 ostream & operator<<(ostream & os, const card & c)

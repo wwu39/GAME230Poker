@@ -37,7 +37,28 @@ int main() {
 			game->displayHands();
 			game->displayOptions();
 			game->getOption();
-			if (game->executeOption() == EXIT) break;
+			int rc = game->executeOption();
+			if (rc == EXIT) {
+				delete game;
+				return 0;
+			}
+			if (rc == CHECK) {
+				game->displayHands();
+				money += game->winMoney();
+				cout << "You now have $" << money << endl;
+				if (money <= 0) {
+					cout << endl << "GAME OVER" << endl;
+					delete game;
+					system("pause");
+					return 0;
+				}
+				cout << endl << "Press enter to play another round..." << endl;
+				cin.get();
+				cin.ignore();
+				cout << "--------------------------------------------------" << endl << endl;
+				money -= ante;
+				cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
+			}
 		}
 		delete game;
 		system("pause");

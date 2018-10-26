@@ -27,6 +27,7 @@
 #define INVALID_VALUE 0
 #define INVALID_SUIT 4
 #define EXIT 1
+#define CHECK 2
 #define TAIL -1
 
 using namespace std;
@@ -55,26 +56,43 @@ class Poker
 	int delCount = MAXHAND;
 
 	// private helpers
+	// linked list related
 	void swap(card * head, int idx1, int idx2);
-	void destroy(card * head);
-	void draw();
+	void destroy(card * &head);
 	card remove(card * &head, int pos, int& count);
 	void insert(card * &head, int pos, const card&, int& count);
+
+	// deck and hands
+	void draw();
 	bool existInHands(card);
 	void reconstructDeck();
-	bool isOption(string);
-	bool isLetter(char);
-	unsigned char getValue(string);
-	unsigned char getSuit(string);
+	void shuffle();
+
+	// checkers
+	bool isRoyalFlush() const; // $800 BO
+	bool isStraightFlush() const; // $50 BO
+	bool is4OfAKind() const; // $25
+	bool isFullHouse() const; // $9 BO
+	bool isFlush() const; // $6
+	bool isStraight() const; // $5
+	bool is3OfAKind() const; // $3
+	bool is2Pairs() const; // $2
+	bool isPairJackOrBetter() const; // $1
+
+	// miscellaneous
+	bool isOption(string) const;
+	bool isLetter(char) const;
+	unsigned char getValue(string) const;
+	unsigned char getSuit(string) const;
+	void printValue(int) const;
 public:
 	Poker();
 	~Poker();
-	void shuffle();
 	void draw(int);
-	void displayHands() const;
+	void displayHands();
 	void displayDeck() const;
 	void displayOptions() const;
-	void discard();
+	int winMoney();
 	void getOption();
 	int executeOption();
 };
