@@ -21,44 +21,42 @@ int main() {
 	// memory checking
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	cout << "Welcome to Video Poker!" << endl;
-
+	// game settings
 	int money = START_MONEY;
-	int ante = ANTE;
+	const int ante = ANTE;
 
+	// start a new game
+	Poker * game = new Poker();
+	cout << "Welcome to Video Poker!" << endl;
 	cout << "You have started with $" << money << endl;
-
+	money -= ante;
+	cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
+	game->draw(5);
 	while (1) { // game loop
-		money -= ante;
-		cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
-		Poker * game = new Poker();
-		game->draw(5);
-		while (1) {
+		game->displayHands();
+		game->displayOptions();
+		game->getOption();
+		int rc = game->executeOption();
+		if (rc == EXIT) {
+			delete game;
+			return 0;
+		}
+		if (rc == CHECK) {
 			game->displayHands();
-			game->displayOptions();
-			game->getOption();
-			int rc = game->executeOption();
-			if (rc == EXIT) {
+			money += game->winMoney();
+			cout << "You now have $" << money << endl;
+			if (money <= 0) {
+				cout << endl << "GAME OVER" << endl;
 				delete game;
+				system("pause");
 				return 0;
 			}
-			if (rc == CHECK) {
-				game->displayHands();
-				money += game->winMoney();
-				cout << "You now have $" << money << endl;
-				if (money <= 0) {
-					cout << endl << "GAME OVER" << endl;
-					delete game;
-					system("pause");
-					return 0;
-				}
-				cout << endl << "Press enter to play another round..." << endl;
-				cin.get();
-				cin.ignore(9999, '\n');
-				cout << "--------------------------------------------------" << endl << endl;
-				money -= ante;
-				cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
-			}
+			cout << endl << "Press enter to play another round..." << endl;
+			cin.get();
+			cin.ignore(9999, '\n');
+			cout << "--------------------------------------------------" << endl << endl;
+			money -= ante;
+			cout << "You pay a $" << ante << " ante and now have $" << money << endl << endl;
 		}
 	}
 }
